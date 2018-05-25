@@ -19,7 +19,7 @@ public class Splash {
     Map<Color,Integer> colormap;
     double[][] markovmat;
     BufferedImage input;
-    private final String filename = "world";
+    private final String filename = "flag";
 
     public static void main(String[] args) throws IOException{
         Splash splash = new Splash();
@@ -101,7 +101,7 @@ public class Splash {
         for(int i = 1; i<markovmat.length;i++){
             double sum = sumRow(i);
             for(int j = 1; j<markovmat[0].length;j++){
-                markovmat[i][j] /= sum;
+                markovmat[i][j] = (markovmat[i][j] / sum);
             }
         }
     }
@@ -116,30 +116,14 @@ public class Splash {
 
     private void countUpOccurences(int seed, int i, int j){
         //above
-        if(inBounds(i-1,j))
-        {
-            Color c = pix[i-1][j];
-            int transition = colormap.get(c);
-            markovmat[seed][transition]++;
-        }
-        //below
-        if(inBounds(i+1,j)){
-            Color c = pix[i+1][j];
-            int transition = colormap.get(c);
-            markovmat[seed][transition]++;
-        }
-        //right
-        if(inBounds(i,j+1)){
-            Color c = pix[i][j+1];
-            int transition = colormap.get(c);
-            markovmat[seed][transition]++;
-        }
-        //left
-        if(inBounds(i,j-1)){
-            Color c = pix[i][j-1];
-            int transition = colormap.get(c);
-            markovmat[seed][transition]++;
-
+        for(int r = -1; r<=1;r++){
+            for(int c = -1;c<=1;c++){
+                if(inBounds(i+r,j+c)){
+                    Color col = pix[i+r][j+c];
+                    int transition = colormap.get(col);
+                    markovmat[seed][transition]++;
+                }
+            }
         }
     }
     private boolean inBounds(int i, int j){
