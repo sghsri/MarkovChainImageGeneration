@@ -9,29 +9,27 @@ import java.io.IOException;
 import java.util.*;
 import javax.imageio.ImageIO;
 
-import static java.lang.System.out;
-
 
 public class MarkovImage {
 
     Color[][] pix;
     Set<Color> colorsSet;
     Map<Color, Map<Integer, Double>> markovmap;
-    Map<Color, Double> rowsum;
+    Map<Color, Double> rowsums;
     BufferedImage input;
-    private final String filename = "flag";
+    private final String filename = "world";
     private final String filetype = ".png";
 
     public static void main(String[] args) throws IOException {
         MarkovImage markovImage = new MarkovImage();
         markovImage.loadFromImage(new File(markovImage.filename + markovImage.filetype));
-        markovImage.calculatePercentages();
+        markovImage.calculateWeights();
         markovImage.generateImage();
     }
 
     public MarkovImage() {
         markovmap = new HashMap<>();
-        rowsum = new HashMap<>();
+        rowsums = new HashMap<>();
     }
 
     private Color getRandomColor() {
@@ -40,11 +38,12 @@ public class MarkovImage {
 
     private void generateImage() {
         BufferedImage bi = new BufferedImage(input.getWidth(), input.getHeight(), BufferedImage.TYPE_INT_RGB);
-        out.println(new Color(bi.getRGB(0, 0)));
         boolean[][] visited = new boolean[bi.getWidth()][bi.getHeight()];
+        //start the chain with a random color
         Color c = getRandomColor();
         for (int i = 0; i < bi.getWidth(); i++) {
             for (int j = 0; j < bi.getHeight(); j++) {
+                //go through each pixel in the resultant image
                 c = generateImageHelper(bi, i, j, c, visited);
             }
         }
@@ -98,6 +97,7 @@ public class MarkovImage {
         colorsSet = new HashSet<>();
         for (int i = 0; i < input.getWidth(); i++) {
             for (int j = 0; j < input.getHeight(); j++) {
+                //add to the array of pixels and set of colors in the input image
                 Color c = new Color(input.getRGB(i, j));
                 colorsSet.add(c);
                 pix[i][j] = c;
@@ -105,12 +105,14 @@ public class MarkovImage {
         }
     }
 
-    private void calculatePercentages() {
+    private void calculateWeights() {
+        //get the frequences for all the colors
         countUpOccurences();
         for (Color col : markovmap.keySet()) {
-            double sum = rowsum.get(col);
+            //make them into percentages
+            double rowsum = rowsums.get(col);
             for (Integer adj : markovmap.get(col).keySet()) {
-                double weight = markovmap.get(col).get(adj) / sum;
+                double weight = markovmap.get(col).get(adj) / rowsum;
                 markovmap.get(col).put(adj, weight);
             }
         }
@@ -125,14 +127,16 @@ public class MarkovImage {
             for (int i = 0; i < pix.length; i++) {
                 for (int j = 0; j < pix[0].length; j++) {
                     Color currcolor = pix[i][j];
+                    //count the adjacent colors w/ respect to current and their frequences
                     if (currcolor.equals(current)) {
                         for (int r = -1; r <= 1; r++) {
                             for (int c = -1; c <= 1; c++) {
                                 if (inBounds(i + r, j + c)) {
+                                    //converting the color to rgb int so we can compare them and keep them sorted in the treemap
                                     int next = pix[i + r][j + c].getRGB();
                                     Double count = adjacent.get(next);
                                     if (count != null) {
-                                        adjacent.put(next, count + 1);
+                                        adjacent.put(next, count + 1.0);
                                     } else {
                                         adjacent.put(next, 1.0);
                                     }
@@ -143,8 +147,8 @@ public class MarkovImage {
                     }
                 }
             }
-            //put the sum of each "row" in the map with the zero length space as its key
-            rowsum.put(current, sum);
+            //put the sum of each "row" in the map
+            rowsums.put(current, sum);
             markovmap.put(current, adjacent);
         }
     }
