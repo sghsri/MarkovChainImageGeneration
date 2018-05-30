@@ -17,12 +17,12 @@ public class MarkovImage {
     Map<Color, Map<Integer, Double>> markovmap;
     Map<Color, Double> rowsums;
     BufferedImage input;
-    private final String filename = "world";
+    private final String path = "Images/flag";
     private final String filetype = ".png";
 
     public static void main(String[] args) throws IOException {
         MarkovImage markovImage = new MarkovImage();
-        markovImage.loadFromImage(new File(markovImage.filename + markovImage.filetype));
+        markovImage.loadFromImage(new File(markovImage.path + markovImage.filetype));
         markovImage.calculateWeights();
         markovImage.generateImage();
     }
@@ -48,7 +48,7 @@ public class MarkovImage {
             }
         }
         try {
-            File outputfile = new File(filename + "_predicted"+filetype);
+            File outputfile = new File(path + "_predicted"+filetype);
             ImageIO.write(bi, "png", outputfile);
         } catch (IOException e) {
             e.printStackTrace();
